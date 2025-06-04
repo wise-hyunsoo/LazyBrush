@@ -63,16 +63,13 @@ lazybrush_wrapper(PyObject *self, PyObject *args)
     o_nd = PyArray_NDIM(output), cl_nd = PyArray_NDIM(colorlist);
   npy_intp *s_dims = PyArray_DIMS(sketch), *c_dims = PyArray_DIMS(colors), *o_dims = PyArray_DIMS(output);
   npy_intp wdt = s_dims[0], hgt = s_dims[1];
+
   if (s_nd != 2 || c_nd != 1 || o_nd != 1 || cl_nd != 1
       || c_dims[0] != wdt * hgt || o_dims[0] != c_dims[0]) {
     PyErr_SetString(PyExc_ValueError,
 		    "Paramètres invalides");
     return NULL;
   }
-
-  Py_DECREF(c_dims);
-  Py_DECREF(s_dims);
-  Py_DECREF(o_dims);
 
   // Initialisation des structures de graphe
   printf("Dimensions : %dx%d, K : %f\n", (int)wdt, (int)hgt, K);
@@ -84,7 +81,7 @@ lazybrush_wrapper(PyObject *self, PyObject *args)
   npy_intp i, j;
   npy_intp numcols = PyArray_DIMS(colorlist)[0];
 
-  Node **colorsets = (Node **)malloc((numcols-1)*sizeof(Node **));
+  Node **colorsets = (Node **)malloc((numcols-1)*sizeof(Node *));
   char *colornames = (char *)malloc(numcols*sizeof(char));
   colornames[0] = 0; // Transparent -> ne doit pas rester à la fin
   for(i=0;i<numcols-1;i++){
@@ -212,6 +209,8 @@ lazybrush_wrapper(PyObject *self, PyObject *args)
   
 
   // Nettoyage
+  free(colorsets);
+  free(colornames);
   free(s);
   free(graph);
   free(points);
@@ -229,22 +228,30 @@ static PyMethodDef LazybrushMethods[] = {
   {NULL, NULL, 0, NULL}        /* Sentinel */
 };
 
+static struct PyModuleDef lazybrushmodule = {
+    PyModuleDef_HEAD_INIT,
+    "lazybrush",   /* name of module */
+    "Computes lazybrush algorithm", /* module documentation, may be NULL */
+    -1,       /* size of per-interpreter state of the module,
+                 or -1 if the module keeps state in global variables. */
+    LazybrushMethods
+};
+
 PyMODINIT_FUNC
-initlazybrush(void) {
-  (void) Py_InitModule("lazybrush", LazybrushMethods);
-  import_array();
+PyInit_lazybrush(void)
+{
+    PyObject *module = PyModule_Create(&lazybrushmodule);
+    if (module == NULL) {
+        return NULL;
+    }
+
+    // Initialize NumPy
+    import_array();
+    if (PyErr_Occurred()) {
+        Py_DECREF(module);
+        return NULL;
+    }
+
+    return module;
 }
 
-int 
-main(int argc, char *argv[]) {
-  /* Pass argv[0] to the Python interpreter */
-  Py_SetProgramName(argv[0]);
-
-  /* Initialize the Python interpreter.  Required. */
-  Py_Initialize();
-
-  /* Add a static module */
-  initlazybrush();
-    
-  return 0;
-}

@@ -30,18 +30,22 @@ def lazybrush(sketch, colors, sigma, l, kscale, useLoG):
         sketch_f = 1 - np.maximum(0, sketch_f / np.max(np.max(sketch_f)))
     else:
         sketch_f = (sketch_f / np.max(np.max(sketch_f))) ** 2.0
+        # sketch_f = 1.0 - sketch_f
     print(np.min(np.min(sketch_f)))
+    
     (wdt, hgt) = sketch_f.shape
     # Drop a dimension
     sketch_f = sketch_f.reshape(wdt, hgt)
     # Colors
     colors_f = np.asarray(colors, dtype=np.uint8).view(dtype=np.uint32).reshape(wdt, hgt)
     list_colors, colors_i = np.unique(colors_f, return_inverse=True)
-    print list_colors
+    colors_i = colors_i.reshape(-1)
     output = colors_i.copy()
     # Core algorithm in c
     wrapper(sketch_f.T, colors_i, list_colors, kscale*2*(wdt+hgt), l, output)
-    output = np.append(output,[0]) # Fix a little bug ?
+    # output = np.append(output,[0]) # Fix a little bug ?
     output = list_colors[output]
     osketch = (sketch_f*255).reshape(wdt, hgt).astype(np.uint8)
+    print(osketch.shape, output.shape)
     return (osketch, output.reshape(wdt, hgt))
+

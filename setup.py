@@ -1,9 +1,14 @@
-from distutils.core import setup, Extension
+from setuptools import setup, Extension
+import numpy
 
-module1 = Extension('lazybrush',
-                    sources = ['lazybrush.c'])
-
-setup (name = 'LazyBrush',
-       version = '1.0',
-       description = 'This is a demo package',
-       ext_modules = [module1])
+setup(
+    name='lazybrush',
+    version='0.1.0',
+    ext_modules=[
+        Extension(
+            'lazybrush',
+            ['lazybrush.c'],
+            include_dirs=[numpy.get_include()],
+        )
+    ]
+)
