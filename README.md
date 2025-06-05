@@ -25,4 +25,4 @@ This repository was based on:
 ## License
 
 This repository is licensed under the Apache-2.0 License.
-> Forked from: Evarin/LazyBrush
+> Forked from: [Evarin/LazyBrush](https://github.com/Evarin/LazyBrush) 
